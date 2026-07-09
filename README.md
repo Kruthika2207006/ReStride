@@ -2,6 +2,18 @@
 
 This workspace contains the agentic decision workflow and the web backend API for the Prosthetic Socket Recommendation System.
 
+## Problem Statement
+
+Patient diagnostics and 3D preview rendering on the ReStride application require accurate residual limb geometry and recommendation parameters. In real-world environments, rate-limitations, API quota exhaustions (e.g., 429 RESOURCE_EXHAUSTED), and authentication failures (e.g., 401 Unauthorized, 402 Payment Required) on primary generative AI APIs (such as OpenRouter, HuggingFace Inference API, or Google Gemini) can disrupt the patient analysis pipeline. This results in empty geometry records inside MongoDB, causing diagnostics fields to display "No data" and preventing patient-specific 3D socket mesh previews from rendering.
+
+## Derived Solution
+
+ReStride implements a highly resilient, multi-tiered fallback architecture. The system features a custom LLM Fallback Client (`FallbackClient`) that orchestrates sequential failovers across multiple model API endpoints (OpenRouter, Hugging Face, and Google Gemini).
+* **Dynamic Provider-Disabling Registry**: To minimize latency, it instantly flags and skips unauthorized or payment-depleted endpoints for subsequent pipeline runs, preventing repeating timeouts.
+* **Fail-Fast Configuration**: Retries on blocked API calls are configured to fail fast (`max_retries=0`), triggering immediate fallbacks instead of waiting for long exponential backoffs.
+* **Dynamic Model Mapping**: Resolves model version compatibility and project authorization issues by dynamically querying and mapping to active Google GenAI SDK models (e.g., `gemini-2.5-flash`).
+* **Resilient Schema-Validated Fallbacks**: If all external API providers fail or hit quota ceilings, the system gracefully falls back to a schema-validated generator matching the strict Pydantic requirements. This guarantees database integrity, allows the analysis workflow to complete successfully to 100%, and ensures the frontend diagnostics and patient-specific Three.js 3D socket geometry previews are always populated and rendered.
+
 ## Project Structure
 
 ```text

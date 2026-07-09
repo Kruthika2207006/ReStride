@@ -28,7 +28,7 @@ class GeminiClient:
             temperature: Overrides default temperature from settings.
             api_key: Optional specific API key.
         """
-        self.model_name = model_name or settings.DEFAULT_MODEL_NAME
+        self.model_name = model_name or "gemini-2.5-flash"
         self.temperature = (
             temperature
             if temperature is not None
@@ -44,6 +44,8 @@ class GeminiClient:
 
         # Detect if we should use Groq instead of Gemini
         self.use_groq = self.api_key.startswith("gsk_")
+        if not self.use_groq and not self.model_name.startswith("gemini"):
+            self.model_name = "gemini-2.5-flash"
 
         if self.use_groq:
             # Normalize model name for Groq API format
@@ -57,6 +59,7 @@ class GeminiClient:
                 model=self.model_name,
                 temperature=self.temperature,
                 google_api_key=self.api_key,
+                max_retries=0,
             )
 
     def _query_groq_api(self, messages: list, response_format: Optional[dict] = None) -> str:

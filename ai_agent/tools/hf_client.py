@@ -79,7 +79,7 @@ class HFClient:
                 method="POST"
             )
             try:
-                with urllib.request.urlopen(req, timeout=90) as response:
+                with urllib.request.urlopen(req, timeout=10) as response:
                     if response.status != 200:
                         raise Exception(f"HTTP status {response.status}")
                     res_data = json.loads(response.read().decode("utf-8"))
