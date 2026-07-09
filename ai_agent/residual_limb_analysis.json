@@ -1,0 +1,11 @@
+{
+    "number_of_views": 4,
+    "residual_limb_shape": "Conical",
+    "average_width_ratio": 2.173,
+    "average_contour_area": 64879.5,
+    "average_width": 244.25,
+    "average_height": 392.75,
+    "view_agreement": 1.0,
+    "confidence": 0.95,
+    "analysis_quality": "High"
+}

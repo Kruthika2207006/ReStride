@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Socket Lathe Geometry Standalone Test</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #socket-3d-canvas-container {
+            width: 80vw;
+            height: 70vh;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            background-color: #1e293b;
+            position: relative;
+            overflow: hidden;
+        }
+        #controls-panel {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #3b82f6;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+    </style>
+    <!-- Load Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <h1>Prosthetic Socket 3D View Test</h1>
+    <div id="socket-3d-canvas-container"></div>
+    <div id="controls-panel">
+        <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+        <button onclick="toggleRotation()">Toggle Rotation</button>
+    </div>
+
+    <script>
+        // Setup mock application state
+        const appState = {
+            activeCase: {
+                geometry: {
+                    limb_length_cm: 15.0,
+                    cross_sectional_circumferences: {
+                        "80%": 30.0,
+                        "50%": 25.0,
+                        "20%": 18.0
+                    },
+                    shape_descriptor: "Conical"
+                },
+                socket: {
+                    socket_design_type: "Patellar Tendon Bearing - PTB",
+                    socket_wall_thickness_mm: 4.0,
+                    offset_values: {
+                        radial_expansion_mm: 1.0,
+                        distal_clearance_mm: 4.0
+                    }
+                }
+            },
+            threeScene: {}
+        };
+
+        function initThreeJSWorkspace() {
+            const container = document.getElementById('socket-3d-canvas-container');
+            if (!container) return;
+
+            // Clear previous canvas if any
+            container.innerHTML = '';
+            const rect = container.getBoundingClientRect();
+
+            // 1. Scene
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+
+            // 2. Geometry & Metrics
+            const geom = appState.activeCase.geometry || {};
+            const circum = geom.cross_sectional_circumferences || {};
+            const c80 = parseFloat(circum['80%']) || 30.0;
+            const c50 = parseFloat(circum['50%']) || 25.0;
+            const c20 = parseFloat(circum['20%']) || 18.0;
+
+            const r_prox = c80 / (2 * Math.PI);
+            const r_mid = c50 / (2 * Math.PI);
+            const r_dist = c20 / (2 * Math.PI);
+
+            const lengthCm = parseFloat(geom.limb_length_cm) || 15.0;
+            const socketData = appState.activeCase.socket || {};
+            const offsetData = socketData.offset_values || {};
+            const radialExpansion = parseFloat(offsetData.radial_expansion_mm || 1.0) / 10.0;
+            const distalClearance = parseFloat(offsetData.distal_clearance_mm || 4.0) / 10.0;
+            const thickness = parseFloat(socketData.socket_wall_thickness_mm || 4.0) / 10.0;
+
+            // Camera positioning - move further back
+            const camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 100);
+            camera.position.set(0, 3, 16);
+
+            // 3. Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(rect.width, rect.height);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // 4. OrbitControls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI * 0.85;
+            controls.minDistance = 8;
+            controls.maxDistance = 35;
+            controls.target.set(0, 0, 0);
+
+            // 5. Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight1.position.set(10, 20, 15);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x3b82f6, 0.4);
+            dirLight2.position.set(-10, -10, -5);
+            scene.add(dirLight2);
+
+            // 6. Lathe Geometry Generation
+            const points = [];
+            const height = lengthCm;
+
+            // Offset radii
+            const base_rDist = r_dist + radialExpansion;
+            const base_rMid = r_mid + radialExpansion;
+            const base_rProx = r_prox + radialExpansion;
+
+            // Inner surface (from bottom cup center up to top rim)
+            points.push(new THREE.Vector2(0, -height/2 - distalClearance));
+            points.push(new THREE.Vector2(base_rDist * 0.5, -height/2 - distalClearance * 0.8));
+            points.push(new THREE.Vector2(base_rDist, -height/2));
+            points.push(new THREE.Vector2(base_rDist * 0.95, -height/3));
+            points.push(new THREE.Vector2(base_rMid, 0));
+            points.push(new THREE.Vector2(base_rProx * 0.95, height/3));
+            points.push(new THREE.Vector2(base_rProx, height/2));
+
+            // Top thickness brim
+            points.push(new THREE.Vector2(base_rProx + thickness, height/2));
+
+            // Outer surface (from top rim down to bottom cup center)
+            points.push(new THREE.Vector2(base_rProx + thickness, height/3));
+            points.push(new THREE.Vector2(base_rMid + thickness, 0));
+            points.push(new THREE.Vector2(base_rDist + thickness, -height/2));
+            points.push(new THREE.Vector2(base_rDist * 0.5 + thickness, -height/2 - distalClearance * 0.8));
+            points.push(new THREE.Vector2(0, -height/2 - distalClearance - thickness));
+
+            const geometry = new THREE.LatheGeometry(points, 32);
+
+            // 7. Heatmap coloring
+            geometry.computeBoundingBox();
+            const minY = geometry.boundingBox.min.y;
+            const maxY = geometry.boundingBox.max.y;
+            const hRange = maxY - minY;
+
+            const colors = [];
+            const color = new THREE.Color();
+            const positions = geometry.attributes.position;
+
+            for (let i = 0; i < positions.count; i++) {
+                const x = positions.getX(i);
+                const y = positions.getY(i);
+                const z = positions.getZ(i);
+
+                const normalizedY = (y - minY) / hRange;
+                const theta = Math.atan2(z, x);
+
+                if (normalizedY > 0.65 && normalizedY < 0.85 && theta < -0.4 && theta > -1.2) {
+                    color.setRGB(0.9, 0.1, 0.1);
+                } else if (normalizedY > 0.7 && normalizedY < 0.9 && theta > 1.2 && theta < 2.0) {
+                    color.setRGB(0.1, 0.8, 0.2);
+                } else if (normalizedY > 0.3 && normalizedY < 0.75 && theta > 0.6 && theta < 1.3) {
+                    color.setRGB(0.9, 0.8, 0.1);
+                } else {
+                    color.setRGB(0.1, 0.4, 0.9);
+                }
+                colors.push(color.r, color.g, color.b);
+            }
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            // 8. Textures and Materials
+            const canvasTexture = document.createElement('canvas');
+            canvasTexture.width = 64;
+            canvasTexture.height = 64;
+            const ctxTex = canvasTexture.getContext('2d');
+            ctxTex.fillStyle = '#f8fafc';
+            ctxTex.fillRect(0, 0, 64, 64);
+            ctxTex.fillStyle = '#e2e8f0';
+            for (let x = 0; x < 64; x += 8) {
+                for (let y = 0; y < 64; y += 8) {
+                    if ((x + y) % 16 === 0) {
+                        ctxTex.fillRect(x, y, 8, 8);
+                    }
+                }
+            }
+            const clinicalTex = new THREE.CanvasTexture(canvasTexture);
+            clinicalTex.wrapS = THREE.RepeatWrapping;
+            clinicalTex.wrapT = THREE.RepeatWrapping;
+            clinicalTex.repeat.set(8, 16);
+
+            const materialClinical = new THREE.MeshStandardMaterial({
+                color: 0xFFFFFF,
+                roughness: 0.3,
+                metalness: 0.1,
+                bumpMap: clinicalTex,
+                bumpScale: 0.02
+            });
+
+            const materialHeatmap = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                roughness: 0.35,
+                metalness: 0.1,
+                flatShading: true
+            });
+
+            const socketMesh = new THREE.Mesh(geometry, materialClinical);
+            scene.add(socketMesh);
+
+            // Save variables to appState
+            appState.threeScene = {
+                container,
+                scene,
+                camera,
+                renderer,
+                controls,
+                socketMesh,
+                materialCarbon: materialClinical,
+                materialHeatmap,
+                autoRotate: true,
+                heatmapActive: false
+            };
+
+            // 9. Animation Loop
+            function render() {
+                if (!appState.threeScene.renderer) return;
+                requestAnimationFrame(render);
+
+                if (appState.threeScene.autoRotate) {
+                    socketMesh.rotation.y += 0.005;
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            render();
+
+            // Resize listener
+            window.addEventListener('resize', () => {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            });
+        }
+
+        function toggleHeatmap() {
+            const ts = appState.threeScene;
+            if (!ts || !ts.socketMesh) return;
+            ts.heatmapActive = !ts.heatmapActive;
+            ts.socketMesh.material = ts.heatmapActive ? ts.materialHeatmap : ts.materialCarbon;
+        }
+
+        function toggleRotation() {
+            const ts = appState.threeScene;
+            if (!ts) return;
+            ts.autoRotate = !ts.autoRotate;
+        }
+
+        // Initialize on load
+        window.onload = initThreeJSWorkspace;
+    </script>
+</body>
+</html>
