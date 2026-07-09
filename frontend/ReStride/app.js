@@ -1780,26 +1780,6 @@ function initThreeJSWorkspace() {
                 '20%': 18.0
             }
         };
-        isMock = true;
-    }
-
-    // Toggle mock badge visibility
-    let badge = document.getElementById('mock-3d-badge');
-    if (isMock) {
-        if (!badge) {
-            badge = document.createElement('div');
-            badge.id = 'mock-3d-badge';
-            badge.style.cssText = "position:absolute; bottom:80px; right:20px; background:#f59e0b; padding:4px 12px; border-radius:20px; font-size:11px; color:#fff; z-index:20; font-family:system-ui, sans-serif; font-weight: 600; display:flex; align-items:center; gap:4px;";
-            badge.innerHTML = "⚠️ Mock Geometry";
-            container.style.position = 'relative';
-            container.appendChild(badge);
-        } else {
-            badge.style.display = 'flex';
-        }
-    } else {
-        if (badge) {
-            badge.style.display = 'none';
-        }
     }
 
     // Prevent duplicate scenes if returning
