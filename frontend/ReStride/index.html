@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReStride — AI-Assisted Prosthetic Socket Design Platform</title>
+    <!-- CSS File -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+
+<body>
+
+    <!-- ============================================== -->
+    <!-- SPLASH SCREEN                                  -->
+    <!-- ============================================== -->
+    <div id="splash-screen" aria-hidden="true">
+        <!-- Animated background grid -->
+        <canvas id="splash-canvas"></canvas>
+
+        <div class="splash-content">
+            <!-- Icon badge -->
+            <div class="splash-icon-badge" id="splash-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            </div>
+
+            <!-- Animated word mark -->
+            <div class="splash-wordmark" id="splash-wordmark">
+                <!-- "R" — always visible first -->
+                <span class="splash-letter cap" id="sl-R">R</span>
+
+                <!-- "e" — expands out to the RIGHT of R -->
+                <span class="splash-letter lower expand-right" id="sl-e">e</span>
+
+                <!-- "S" — always visible first -->
+                <span class="splash-letter cap" id="sl-S">S</span>
+
+                <!-- "tride" — expands out to the RIGHT of S -->
+                <span class="splash-letter lower expand-right" id="sl-t">t</span>
+                <span class="splash-letter lower expand-right" id="sl-r">r</span>
+                <span class="splash-letter lower expand-right" id="sl-i">i</span>
+                <span class="splash-letter lower expand-right" id="sl-d">d</span>
+                <span class="splash-letter lower expand-right" id="sl-e2">e</span>
+            </div>
+
+            <!-- Tagline -->
+            <p class="splash-tagline" id="splash-tagline">
+                AI-Assisted Prosthetic Socket Design Platform
+            </p>
+
+            <!-- Loading bar -->
+            <div class="splash-loader-track">
+                <div class="splash-loader-fill" id="splash-loader"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation -->
+    <header class="top-nav glass-panel">
+        <div class="nav-left">
+            <a href="#" class="logo-container" id="brand-logo">
+                <div class="logo-icon">
+                    <i data-lucide="activity"></i>
+                </div>
+                <span>ReStride</span>
+            </a>
+            <div class="nav-tagline">AI-Assisted Prosthetic Socket Design</div>
+        </div>
+
+        <div class="nav-center">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search patients, assessments, or case IDs..." class="search-box">
+        </div>
+
+        <div class="nav-right">
+            <!-- Theme Toggle -->
+            <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark / Light Mode"
+                aria-label="Toggle colour theme">
+                <i data-lucide="sun" class="icon-sun" style="width:18px;height:18px;"></i>
+                <i data-lucide="moon" class="icon-moon" style="width:18px;height:18px;"></i>
+            </button>
+
+            <button class="nav-action-btn" id="notif-btn" title="Notifications">
+                <i data-lucide="bell"></i>
+                <span class="notification-badge"></span>
+            </button>
+
+            <div class="doctor-profile">
+                <div class="profile-avatar">SJ</div>
+                <div class="profile-info">
+                    <span class="profile-name">Dr. Sarah Jenkins</span>
+                    <span class="profile-role">Senior Prosthetist</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Main Container -->
+    <main class="app-container">
+
+        <!-- Navigation Workflow Stepper -->
+        <nav class="workflow-stepper" id="main-stepper" style="display: none;">
+            <div class="step-item active" data-step="1">
+                <div class="step-num">1</div>
+                <span class="step-text">Patient Info</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="2">
+                <div class="step-num">2</div>
+                <span class="step-text">Image Upload</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="3">
+                <div class="step-num">3</div>
+                <span class="step-text">AI Analysis</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="4">
+                <div class="step-num">4</div>
+                <span class="step-text">Limb Diagnostics</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="5">
+                <div class="step-num">5</div>
+                <span class="step-text">AI Recommendation</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="6">
+                <div class="step-num">6</div>
+                <span class="step-text">Safety Check</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="7">
+                <div class="step-num">7</div>
+                <span class="step-text">3D Preview</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="8">
+                <div class="step-num">8</div>
+                <span class="step-text">Export Report</span>
+            </div>
+        </nav>
+
+        <!-- ============================================== -->
+        <!-- PAGE 1: WORKSPACE HOME                         -->
+        <!-- ============================================== -->
+        <section id="page-home" class="page-view active">
+            <div class="dashboard-grid">
+                <div class="main-dashboard-content">
+
+                    <!-- Hero Card -->
+                    <div class="card hero-card">
+                        <div class="hero-content">
+                            <h1 class="gradient-text">Welcome to ReStride</h1>
+                            <p>AI-powered clinical decision support system for residual limb shape classification,
+                                pressure tolerance analysis, and personalized prosthetic socket recommendation design.
+                            </p>
+                            <div class="hero-actions">
+                                <button class="btn btn-primary" id="btn-start-assessment">
+                                    <i data-lucide="plus-circle"></i>
+                                    New Patient Assessment
+                                </button>
+                                <button class="btn btn-secondary" id="btn-resume-case">
+                                    <i data-lucide="folder-open"></i>
+                                    Resume Previous Case
+                                </button>
+                            </div>
+                        </div>
+                        <div class="hero-vector">
+                            <div class="hero-glow-sphere"></div>
+                            <svg width="180" height="180" viewBox="0 0 100 100" style="z-index: 2;">
+                                <!-- Futuristic limb mesh visualization design -->
+                                <path d="M50 15 C60 15, 62 45, 60 70 C58 85, 42 85, 40 70 C38 45, 40 15, 50 15 Z"
+                                    fill="none" stroke="url(#limbGrad)" stroke-width="2" />
+                                <path d="M50 25 C58 25, 59 45, 58 65 C56 78, 44 78, 42 65 C41 45, 42 25, 50 25 Z"
+                                    fill="none" stroke="url(#limbGrad2)" stroke-width="1.5" stroke-dasharray="2 2" />
+                                <line x1="30" y1="35" x2="70" y2="35" stroke="rgba(37, 99, 235, 0.2)"
+                                    stroke-width="1" />
+                                <line x1="30" y1="50" x2="70" y2="50" stroke="rgba(37, 99, 235, 0.2)"
+                                    stroke-width="1" />
+                                <line x1="32" y1="65" x2="68" y2="65" stroke="rgba(37, 99, 235, 0.2)"
+                                    stroke-width="1" />
+                                <circle cx="50" cy="35" r="4" fill="var(--primary)" />
+                                <circle cx="58" cy="50" r="4" fill="var(--secondary)" />
+                                <circle cx="43" cy="65" r="4" fill="var(--accent)" />
+                                <circle cx="50" cy="76" r="4" fill="var(--warning)" />
+                                <defs>
+                                    <linearGradient id="limbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#2563EB" />
+                                        <stop offset="100%" stop-color="#4F46E5" />
+                                    </linearGradient>
+                                    <linearGradient id="limbGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#10B981" />
+                                        <stop offset="100%" stop-color="#2563EB" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-row">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper primary">
+                                <i data-lucide="users"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-value">1,482</span>
+                                <span class="kpi-label">Total Assessments</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper success">
+                                <i data-lucide="check-circle-2"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-value">18</span>
+                                <span class="kpi-label">Completed Today</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper warning">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-value">4</span>
+                                <span class="kpi-label">Pending Reviews</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper primary">
+                                <i data-lucide="brain"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-value">94.8%</span>
+                                <span class="kpi-label">AI Avg Confidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Assessments Table -->
+                    <div class="card recent-assessments-card">
+                        <div class="card-title">
+                            <i data-lucide="table"></i>
+                            Recent Patient Assessments
+                        </div>
+                        <p class="card-subtitle">List of clinical evaluations processed on the ReStride network.</p>
+
+                        <div class="table-container">
+                            <table class="assessments-table">
+                                <thead>
+                                    <tr>
+                                        <th>Patient ID</th>
+                                        <th>Patient Name</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-assessments-body">
+                                    <!-- Populated in JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Active Case Detailed Results Panel -->
+                    <div id="dashboard-results-panel" class="card" style="display: none; margin-top: 20px;">
+                        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span>
+                                <i data-lucide="brain-circuit"></i>
+                                Analysis Results: <span id="dash-patient-name" style="color: var(--primary);">John Doe</span> (<span id="dash-patient-id">PT-9043</span>)
+                            </span>
+                            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="document.getElementById('dashboard-results-panel').style.display='none';">Close</button>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 15px;">
+                            <!-- Column 1: Geometry -->
+                            <div style="background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <h4 style="color: var(--accent); margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Residual Limb Geometry</h4>
+                                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                                    <div style="display: flex; justify-content: space-between;"><span>Shape Classification:</span><strong id="dash-geom-shape">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Limb Length:</span><strong id="dash-geom-length">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Width Ratio:</span><strong id="dash-geom-width">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Contour Area:</span><strong id="dash-geom-area">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Quality Rating:</span><strong id="dash-geom-quality">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Confidence Score:</span><strong id="dash-geom-confidence">--</strong></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Column 2: Recommendation -->
+                            <div style="background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Socket Recommendation</h4>
+                                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                                    <div style="display: flex; justify-content: space-between;"><span>Socket Design:</span><strong id="dash-rec-socket" style="color: var(--primary);">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Suspension Design:</span><strong id="dash-rec-suspension">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Shell Material:</span><strong id="dash-rec-material">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Wall Thickness:</span><strong id="dash-rec-thickness">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Confidence Rating:</span><strong id="dash-rec-confidence">--</strong></div>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Safety Validation -->
+                            <div style="background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <h4 style="color: var(--warning); margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Safety & Fabrication</h4>
+                                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                                    <div style="display: flex; justify-content: space-between;"><span>Safety Index Rating:</span><strong id="dash-safe-risk" style="color: var(--accent);">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Fabrication Approved:</span><strong id="dash-safe-approved">--</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Safety Status:</span><strong id="dash-safe-status">--</strong></div>
+                                    <div style="display: flex; flex-direction: column; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
+                                        <span style="font-size:11px; color: var(--text-secondary); text-transform:uppercase;">Clinical Findings:</span>
+                                        <ul id="dash-safe-findings" style="margin-left: 15px; font-size: 12px; line-height: 1.4; color: var(--text-primary); max-height: 80px; overflow-y: auto;">
+                                            <li>No findings.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion Explanation -->
+                        <div style="margin-top: 15px; background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 6px; border: 1px dashed rgba(255,255,255,0.08); font-size: 12.5px; line-height: 1.5; color: var(--text-secondary);">
+                            <strong style="color: var(--text-primary);">Clinical Reasoning Path: </strong>
+                            <span id="dash-recom-explanation">No explanation data available.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: AI Timeline Activity -->
+                <div class="timeline-sidebar">
+                    <div class="card" style="height: 100%;">
+                        <div class="card-title">
+                            <i data-lucide="activity"></i>
+                            Recent AI Diagnostics
+                        </div>
+                        <p class="card-subtitle">Real-time processing updates from the clinical pipeline.</p>
+
+                        <div class="timeline-list" id="activity-timeline-list">
+                            <!-- Populated in JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 2: PATIENT INFORMATION FORM               -->
+        <!-- ============================================== -->
+        <section id="page-patient" class="page-view">
+            <div class="card form-card">
+                <div class="card-title">
+                    <i data-lucide="user-plus"></i>
+                    Patient Diagnostic Intake Form
+                </div>
+                <p class="card-subtitle">Provide patient physical stats, clinical context, and amputation specifics to
+                    configure the model.</p>
+
+                <form id="intake-form" onsubmit="event.preventDefault();">
+
+                    <!-- Section: Patient Details -->
+                    <div class="form-section-title">Patient Details</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="pat-id">Patient ID</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="pat-id" class="form-control" placeholder="e.g. PT-9042" required style="flex-grow: 1;">
+                                <button type="button" class="btn btn-secondary" id="check-id-availability-btn" style="padding: 6px 12px; font-size: 12px; white-space: nowrap;">Check Availability</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pat-name">Full Name</label>
+                            <input type="text" id="pat-name" class="form-control" placeholder="John Doe" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="pat-age">Age</label>
+                            <input type="number" id="pat-age" class="form-control" placeholder="45" min="1" max="120"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pat-gender">Gender</label>
+                            <select id="pat-gender" class="form-select" required>
+                                <option value="" disabled selected>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Non-binary">Non-binary</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pat-weight">Weight (kg)</label>
+                            <input type="number" id="pat-weight" class="form-control" placeholder="78" min="20"
+                                max="300" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pat-height">Height (cm)</label>
+                            <input type="number" id="pat-height" class="form-control" placeholder="175" min="80"
+                                max="250" required>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Bar inside Form -->
+                    <div class="step-action-bar" style="border-top: none; padding-top: 0; margin-top: 20px;">
+                        <button class="btn btn-secondary" type="button" id="form-back-btn">
+                            <i data-lucide="arrow-left"></i>
+                            Back to Home
+                        </button>
+                        <button class="btn btn-primary" type="submit" id="form-continue-btn">
+                            Continue to Upload
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 3: RESIDUAL LIMB IMAGE UPLOAD             -->
+        <!-- ============================================== -->
+        <section id="page-upload" class="page-view">
+            <div class="upload-grid">
+
+                <!-- Main upload workspace -->
+                <div class="upload-main-panel">
+                    <div class="card">
+                        <div class="card-title">
+                            <i data-lucide="upload-cloud"></i>
+                            Residual Limb Image Intake
+                        </div>
+                        <p class="card-subtitle">Upload residual limb photographic scans from varying angles to allow
+                            multi-view 3D reconstructions.</p>
+
+                        <div class="dropzone-container" id="image-dropzone">
+                            <div class="upload-cloud-icon">
+                                <i data-lucide="image"></i>
+                            </div>
+                            <div class="dropzone-text">
+                                <h3>Drag & Drop Scans Here</h3>
+                                <p>Supports PNG, JPG, JPEG, or HEIC formats. High resolution recommended.</p>
+                            </div>
+                            <input type="file" id="dropzone-file-input" multiple accept="image/*"
+                                style="display: none;">
+                        </div>
+
+                        <div class="uploaded-images-title" id="uploaded-title" style="display:none;">Uploaded Scans for
+                            Analysis (<span id="upload-count">0</span>)</div>
+                        <div class="image-cards-grid" id="uploaded-images-container">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+
+                        <!-- Stepper navigation -->
+                        <div class="step-action-bar">
+                            <button class="btn btn-secondary" id="upload-back-btn">
+                                <i data-lucide="arrow-left"></i>
+                                Previous
+                            </button>
+                            <button type="button" class="btn btn-primary" id="upload-continue-btn" disabled>
+                                Initiate AI Analysis
+                                <i data-lucide="cpu"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side capture instructions panel -->
+                <div class="upload-sidebar">
+                    <div class="card capture-tips-card">
+                        <div class="card-title">
+                            <i data-lucide="info"></i>
+                            Photography Tips
+                        </div>
+                        <p class="card-subtitle">Ensure optimal input accuracy for the image segmentation model.</p>
+
+                        <div class="tips-list">
+                            <div class="tip-item">
+                                <div class="tip-check">✓</div>
+                                <div class="tip-content">
+                                    <h4>Good Lighting</h4>
+                                    <p>Bright, diffused lighting helps trace soft-tissue gradients accurately.</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-check">✓</div>
+                                <div class="tip-content">
+                                    <h4>Neutral Background</h4>
+                                    <p>Solid, high-contrast backgrounds prevent edge classification errors.</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-check">✓</div>
+                                <div class="tip-content">
+                                    <h4>Entire Limb Visible</h4>
+                                    <p>Include the proximal joint (e.g. knee) to establish anatomical orientation.</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-check">✓</div>
+                                <div class="tip-content">
+                                    <h4>Avoid Shadow Casts</h4>
+                                    <p>Heavy shadows could be misclassified as tissue indentations.</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-check">✓</div>
+                                <div class="tip-content">
+                                    <h4>Capture 4-5 Angles</h4>
+                                    <p>Include Front, Back, Left, Right, and Distal end perspectives.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 4: AI ANALYSIS PIPELINE WORKFLOW          -->
+        <!-- ============================================== -->
+        <section id="page-processing" class="page-view">
+            <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <div class="ai-processing-container">
+
+                    <h2 class="gradient-text" style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Clinical
+                        Engine Running</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 32px;">Please wait while the multi-step
+                        diagnostic pipeline processes patient data and photometrics.</p>
+
+                    <!-- Particle Grid Drawing Canvas -->
+                    <div class="neural-network-canvas-container">
+                        <canvas id="neural-net-canvas"
+                            style="width: 100%; height: 100%; background-color: #0F172A; border-radius: var(--radius-md);"></canvas>
+                    </div>
+
+                    <!-- Progress Bar System -->
+                    <div class="ai-progress-status-box">
+                        <div class="ai-status-text" id="ai-status-indicator">Initializing medical model workspace...
+                        </div>
+                        <div class="ai-progress-bar-bg">
+                            <div class="ai-progress-bar-fill" id="ai-progress-bar"></div>
+                        </div>
+                        <span class="ai-time-remaining">Estimated time remaining: <strong
+                                id="ai-time-counter">18</strong> seconds</span>
+                    </div>
+
+                    <!-- Pipeline Steps Grid -->
+                    <div class="pipeline-steps-container" id="pipeline-steps-list">
+                        <div class="pipeline-step pending" data-step-id="1">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Image Quality Verification & Calibration</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="2">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Background Matting & Object Isolation</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="3">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Tissue Margin Semantic Segmentation</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="4">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Anatomical Landmark Detection & Mapping</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="5">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Multi-View 3D Point-Cloud Reconstruction</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="6">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Biomechanical Feature Extraction & Ratio
+                                    Assessment</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="7">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Residual Limb Shape Classification</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="8">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Clinical Rule Inference Engine</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="9">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Prosthetic Socket Recommendation Generation</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                        <div class="pipeline-step pending" data-step-id="10">
+                            <div class="pipeline-step-left">
+                                <div class="pipeline-step-dot"></div>
+                                <span class="pipeline-step-name">Risk Evaluation & Safety Threshold Validation</span>
+                            </div>
+                            <span class="pipeline-step-status">Pending</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 5: RESIDUAL LIMB DIAGNOSTICS & SUMMARY    -->
+        <!-- ============================================== -->
+        <section id="page-analysis" class="page-view">
+            <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <div class="card-title">
+                    <i data-lucide="bar-chart-2"></i>
+                    Residual Limb Morphological Analysis
+                </div>
+                <p class="card-subtitle">Biomechanical dimensions, classification shape, and analysis metrics extracted
+                    by the neural network.</p>
+
+                <div class="summary-metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Shape Classification</span>
+                        <div class="metric-val text-primary" id="morph-shape">Conical</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Analysis Quality</span>
+                        <div class="metric-val excellent" id="morph-quality">Excellent</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Shape Confidence</span>
+                        <div class="metric-val" id="morph-confidence" style="color: var(--secondary);">95.4%</div>
+                    </div>
+                </div>
+
+                <div class="form-section-divider" style="margin: 24px 0 16px 0;"></div>
+
+                <!-- AI Analysis Summary -->
+                <div class="form-section-title" style="font-size: 14px; margin-bottom: 16px;">AI Analysis Summary</div>
+                <div class="summary-metrics-grid"
+                    style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div class="metric-box">
+                        <span class="metric-label">Shape Classification</span>
+                        <div class="metric-val text-primary" id="summary-shape"
+                            style="font-size: 16px; margin-top: 4px;">Conical</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Analysis Quality</span>
+                        <div class="metric-val excellent" id="summary-quality"
+                            style="font-size: 16px; margin-top: 4px;">Excellent</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Confidence</span>
+                        <div class="metric-val" id="summary-confidence"
+                            style="font-size: 16px; margin-top: 4px; color: var(--secondary);">95.4%</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Number of Images Analyzed</span>
+                        <div class="metric-val" id="summary-images" style="font-size: 16px; margin-top: 4px;">3</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Average Width Ratio</span>
+                        <div class="metric-val" id="summary-width-ratio" style="font-size: 16px; margin-top: 4px;">0.52
+                        </div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Average Contour Area (px²)</span>
+                        <div class="metric-val" id="summary-contour-area" style="font-size: 16px; margin-top: 4px;">
+                            12,450 px²</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Estimated Limb Length (cm)</span>
+                        <div class="metric-val" id="summary-limb-length" style="font-size: 16px; margin-top: 4px;">22.1
+                            cm</div>
+                    </div>
+                </div>
+
+                <!-- Stepper navigation -->
+                <div class="step-action-bar" style="margin-top: 32px; padding-top: 16px;">
+                    <button class="btn btn-secondary" id="analysis-back-btn">
+                        <i data-lucide="arrow-left"></i>
+                        Previous
+                    </button>
+                    <button class="btn btn-primary" id="analysis-continue-btn">
+                        View Socket Recommendation
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 6: AI RECOMMENDATION PANEL                -->
+        <!-- ============================================== -->
+        <section id="page-recom" class="page-view">
+            <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <div class="card-title">
+                    <i data-lucide="shield-check"></i>
+                    Prosthetic Socket Recommendation
+                </div>
+                <p class="card-subtitle">AI clinical model parameters calculated using patient anatomy parameters and
+                    comorbidities.</p>
+
+                <div class="recom-details-list">
+                    <div class="recom-detail-card">
+                        <div class="recom-detail-label">Recommended Socket Type</div>
+                        <div class="recom-detail-value text-primary" id="rec-socket">Total Surface Bearing (TSB)</div>
+                    </div>
+                    <div class="recom-detail-card accent">
+                        <div class="recom-detail-label">Suspension Design</div>
+                        <div class="recom-detail-value" id="rec-suspension">Suction Suspension</div>
+                    </div>
+                    <div class="recom-detail-card">
+                        <div class="recom-detail-label">Recommended Shell Material</div>
+                        <div class="recom-detail-value" id="rec-material">Carbon Fiber Composite</div>
+                    </div>
+                    <div class="recom-detail-card accent">
+                        <div class="recom-detail-label">Clinical Confidence Rating</div>
+                        <div class="recom-detail-value text-primary" id="rec-confidence">95%</div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Explain Recommendation -->
+                <div class="accordion" id="explain-accordion">
+                    <div class="accordion-header" id="accordion-toggle">
+                        <span>Explain AI Recommendation Diagnostic Path</span>
+                        <i data-lucide="chevron-down" class="accordion-arrow"></i>
+                    </div>
+                    <div class="accordion-body">
+                        <p>The final recommendation leverages a Total Surface Bearing (TSB) design with a Silicone Gel
+                            Liner and Suction Suspension based on the detected limb morphology and extracted geometric
+                            features.</p>
+                    </div>
+                </div>
+
+                <!-- Nav buttons -->
+                <div class="step-action-bar" style="margin-top: 32px; padding-top: 16px;">
+                    <button class="btn btn-secondary" id="recom-back-btn">
+                        <i data-lucide="arrow-left"></i>
+                        Previous
+                    </button>
+                    <button class="btn btn-primary" id="recom-continue-btn">
+                        Continue to Safety Check
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 7: SAFETY VALIDATION                      -->
+        <!-- ============================================== -->
+        <section id="page-safety" class="page-view">
+            <div class="safety-grid">
+
+                <!-- Risk Gauge -->
+                <div class="card" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <div class="card-title">
+                        <i data-lucide="shield-alert"></i>
+                        Biomechanical Safety Index
+                    </div>
+                    <p class="card-subtitle">Real-time evaluation of skin breakdown, pressure points, and shear risk
+                        thresholds.</p>
+
+                    <div class="gauge-container">
+                        <svg class="risk-gauge-svg" width="160" height="160" viewBox="0 0 100 100">
+                            <!-- Background stroke circle -->
+                            <circle class="risk-gauge-bg" cx="50" cy="50" r="45" />
+                            <!-- Foreground indicator fill circle -->
+                            <circle class="risk-gauge-fill" id="risk-gauge-circle" cx="50" cy="50" r="45" />
+                        </svg>
+                        <div class="gauge-inner-text">
+                            <span class="gauge-title">Risk Rating</span>
+                            <span class="gauge-val" id="risk-rating-val">LOW</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Safety Information Panel -->
+                <div class="safety-right-panel" style="display: flex; flex-direction: column; gap: 20px; height: 100%;">
+
+                    <!-- Card 1: Fabrication Approved -->
+                    <div class="card"
+                        style="padding: 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90px;">
+                        <span class="card-subtitle"
+                            style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; width: 100%;">Fabrication
+                            Approved</span>
+                        <div id="safety-fabrication-approved" style="font-size: 32px; font-weight: 800; color: var(--accent);">TRUE</div>
+                    </div>
+
+                    <!-- Card 2: Safety Status -->
+                    <div class="card"
+                        style="padding: 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90px;">
+                        <span class="card-subtitle"
+                            style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; width: 100%;">Safety
+                            Status</span>
+                        <div id="safety-review-status" style="font-size: 22px; font-weight: 700; color: var(--accent);">Safety Review Passed</div>
+                    </div>
+
+                    <!-- Card 3: Clinical Findings -->
+                    <div class="card" style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
+                        <span class="card-subtitle"
+                            style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: block; width: 100%;">Clinical
+                            Findings</span>
+                        <ul id="safety-clinical-findings"
+                            style="margin-left: 20px; font-size: 13.5px; line-height: 1.6; color: var(--text-primary); list-style-type: disc;">
+                            <!-- Dynamically populated in app.js -->
+                        </ul>
+                    </div>
+
+                    <!-- Nav buttons -->
+                    <div class="step-action-bar" style="margin-top: auto; padding-top: 16px;">
+                        <button class="btn btn-secondary" id="safety-back-btn">
+                            <i data-lucide="arrow-left"></i>
+                            Previous
+                        </button>
+                        <button class="btn btn-primary" id="safety-continue-btn">
+                            Proceed to 3D Preview
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 8: 3D SOCKET PREVIEW                      -->
+        <!-- ============================================== -->
+        <section id="page-3d" class="page-view">
+            <div class="preview-3d-grid">
+
+                <!-- Main Canvas view area -->
+                <div class="canvas-3d-panel">
+                    <div class="card" style="padding: 0; overflow: hidden; position: relative;">
+                        <!-- Interactive 3D WebGL Canvas -->
+                        <div class="canvas-3d-container" id="socket-3d-canvas-container">
+                            <!-- Overlay controls -->
+                            <div class="viewer-controls-bar">
+                                <button class="viewer-btn active" id="viewer-btn-rotate" title="Toggle Auto-Rotation">
+                                    <i data-lucide="rotate-cw"></i>
+                                </button>
+                                <button class="viewer-btn" id="viewer-btn-pan" title="Reset View Angle">
+                                    <i data-lucide="move"></i>
+                                </button>
+                                <button class="viewer-btn" id="viewer-btn-zoom-in" title="Zoom In">
+                                    <i data-lucide="zoom-in"></i>
+                                </button>
+                                <button class="viewer-btn" id="viewer-btn-zoom-out" title="Zoom Out">
+                                    <i data-lucide="zoom-out"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step navigation buttons underneath inside card -->
+                        <div class="step-action-bar" style="padding: 16px 24px;">
+                            <button class="btn btn-secondary" id="preview-back-btn">
+                                <i data-lucide="arrow-left"></i>
+                                Previous
+                            </button>
+                            <button class="btn btn-primary" id="preview-continue-btn">
+                                Generate Case Exports
+                                <i data-lucide="arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: 3D model properties -->
+                <div class="canvas-3d-sidebar">
+                    <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                        <div class="card-title">
+                            <i data-lucide="box"></i>
+                            3D Shell Geometry
+                        </div>
+                        <p class="card-subtitle">Structural properties generated for STL exports.</p>
+
+                        <div class="measurement-list" style="margin-top: 12px;">
+                            <div class="measurement-row">
+                                <span class="measurement-name">Socket Type</span>
+                                <span class="measurement-value" id="mesh-socket">Total Surface Bearing</span>
+                            </div>
+                            <div class="measurement-row">
+                                <span class="measurement-name">Material</span>
+                                <span class="measurement-value" id="mesh-material">Carbon Fiber Composite</span>
+                            </div>
+                            <div class="measurement-row">
+                                <span class="measurement-name">Socket Thickness</span>
+                                <span class="measurement-value" id="mesh-thickness">4.0 mm</span>
+                            </div>
+                            <div class="measurement-row">
+                                <span class="measurement-name">Radial Expansion</span>
+                                <span class="measurement-value" id="mesh-expansion">1.0 mm</span>
+                            </div>
+                            <div class="measurement-row">
+                                <span class="measurement-name">Distal Clearance</span>
+                                <span class="measurement-value" id="mesh-clearance">4.0 mm</span>
+                            </div>
+                        </div>
+
+                        <div class="form-section-divider"></div>
+
+                        <!-- 3D Actions buttons -->
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: auto;">
+                            <button class="btn btn-accent" id="btn-generate-stl"
+                                style="width: 100%; justify-content: flex-start;">
+                                <i data-lucide="download"></i>
+                                Generate STL File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- PAGE 9: EXPORT & CASE COMPLETION               -->
+        <!-- ============================================== -->
+        <section id="page-export" class="page-view">
+            <div class="card">
+                <div class="export-panel-container">
+
+                    <div class="success-icon-animated">
+                        <i data-lucide="check"></i>
+                    </div>
+
+                    <h1 class="gradient-text export-headline">Analysis & Design Complete</h1>
+                    <p class="export-subtitle">The patient case records, diagnostic images, and generated 3D socket
+                        contours are signed off and ready for clinical export.</p>
+
+                    <!-- Export Options Grid -->
+                    <div class="export-actions-grid">
+                        <div class="export-card-btn" id="btn-export-pdf">
+                            <div class="export-card-icon">
+                                <i data-lucide="file-text"></i>
+                            </div>
+                            <span class="export-card-title">Download Medical PDF</span>
+                            <p class="export-card-desc">Signed clinical summary report, measurement grids, and
+                                recommendations chart.</p>
+                        </div>
+
+                        <div class="export-card-btn" id="btn-export-json">
+                            <div class="export-card-icon">
+                                <i data-lucide="code"></i>
+                            </div>
+                            <span class="export-card-title">Export CAD JSON data</span>
+                            <p class="export-card-desc">Biomechanical coordinate fields, raw shapes, and custom
+                                clearance arrays.</p>
+                        </div>
+
+                        <div class="export-card-btn" id="btn-export-stl-page">
+                            <div class="export-card-icon">
+                                <i data-lucide="box"></i>
+                            </div>
+                            <span class="export-card-title">Download Socket STL</span>
+                            <p class="export-card-desc">High-resolution 3D mesh ready for CNC routing or additive 3D
+                                manufacturing.</p>
+                        </div>
+
+                        <div class="export-card-btn" id="btn-share-case">
+                            <div class="export-card-icon">
+                                <i data-lucide="share-2"></i>
+                            </div>
+                            <span class="export-card-title">Share Case File</span>
+                            <p class="export-card-desc">Send clinical file securely via HL7 link directly to prosthetics
+                                laboratory.</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="display: flex; justify-content: center; gap: 16px;">
+                        <button class="btn btn-secondary" id="btn-save-case-db">
+                            <i data-lucide="save"></i>
+                            Save to Patient DB
+                        </button>
+                        <button class="btn btn-primary reset-assess-btn" id="btn-new-assessment">
+                            <i data-lucide="user-plus"></i>
+                            Start New Assessment
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: Explain Recommendation Rules Details -->
+    <div class="modal-overlay" id="explain-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Decision Tree Diagnostic Trace</h3>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body-content">
+                <!-- Content injected dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-ok-btn">Close Diagnostic Trace</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JavaScript App File -->
+    <script src="app.js"></script>
+</body>
+
+</html>
