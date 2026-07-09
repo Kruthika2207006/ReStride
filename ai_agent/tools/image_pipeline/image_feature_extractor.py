@@ -16,7 +16,17 @@ def extract_features(image_path):
         mask = (alpha > 0).astype(np.uint8) * 255
     else:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, mask = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY)
+        # Try Otsu's thresholding (Inverted for light background)
+        _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        # If mask is mostly empty or solid, try non-inverted Otsu (for dark background)
+        if np.sum(mask == 255) < mask.size * 0.05 or np.sum(mask == 255) > mask.size * 0.95:
+            _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Pad mask with a 2-pixel black border to ensure contours are successfully closed and captured
+    mask[0:2, :] = 0
+    mask[-2:, :] = 0
+    mask[:, 0:2] = 0
+    mask[:, -2:] = 0
 
     contours, _ = cv2.findContours(
         mask,

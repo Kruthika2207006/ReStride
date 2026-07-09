@@ -16,6 +16,9 @@ build/
 # Local uploads and data
 uploads/*
 !uploads/.gitkeep
+*_nobg.png
+*.json
+residual_limb_analysis.json
 
 # IDE and System files
 .vscode/
